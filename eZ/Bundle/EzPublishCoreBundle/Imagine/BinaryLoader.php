@@ -8,6 +8,7 @@
  */
 namespace eZ\Bundle\EzPublishCoreBundle\Imagine;
 
+use eZ\Publish\Core\IO\Exception\InvalidBinaryFileIdException;
 use eZ\Publish\Core\IO\IOServiceInterface;
 use eZ\Publish\Core\Base\Exceptions\NotFoundException;
 use eZ\Publish\Core\IO\Values\MissingBinaryFile;
@@ -56,6 +57,17 @@ class BinaryLoader implements LoaderInterface
             );
         } catch (NotFoundException $e) {
             throw new NotLoadableException("Source image not found in $path", 0, $e);
+        } catch (InvalidBinaryFileIdException $e) {
+            $message =
+                "Source image not found in $path. Repository images path are expected to be " .
+                "relative to the var/<site>/storage/images directory";
+
+            $suggestedPath = preg_replace('#var/[^/]+/storage/images/#', '', $path);
+            if ($suggestedPath) {
+                $message .= "\nSuggested value: '$suggestedPath'";
+            }
+
+            throw new NotLoadableException($message);
         }
     }
 }
